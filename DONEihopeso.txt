@@ -1,0 +1,76 @@
+set fso = CreateObject("Scripting.FileSystemObject")
+
+' Yêu cầu người dùng nhập đường dẫn thư mục
+Dim folderPath
+folderPath = InputBox("Please enter the folder path:", "Folder Path")
+If folderPath = "" Or Not fso.FolderExists(folderPath) Then
+    MsgBox "Invalid folder path. The process will be terminated."
+    WScript.Quit
+End If
+
+set root = fso.getFolder(folderPath)
+
+' Yêu cầu người dùng nhập số bắt đầu
+Dim number
+number = InputBox("Please enter the starting number:", "Starting Number")
+If IsNumeric(number) = False Or number = "" Then
+    MsgBox "Invalid input. The process will be terminated."
+    WScript.Quit
+End If
+
+number = CInt(number) ' Chuyển đổi giá trị thành số nguyên
+
+' Tạo một mảng chứa danh sách file để sắp xếp
+Dim fileList()
+Dim fileCount
+fileCount = 0
+
+' Lưu tất cả các file vào mảng
+for each file in root.Files
+    ReDim Preserve fileList(fileCount)
+    Set fileList(fileCount) = file
+    fileCount = fileCount + 1
+next
+
+' Sắp xếp danh sách file theo tên
+Dim i, j, tempFile
+for i = 0 to UBound(fileList) - 1
+    for j = i + 1 to UBound(fileList)
+        if LCase(fileList(i).Name) > LCase(fileList(j).Name) then
+            Set tempFile = fileList(i)
+            Set fileList(i) = fileList(j)
+            Set fileList(j) = tempFile
+        end if
+    next
+next
+
+' Đổi tên tạm thời để tránh trùng lặp
+for i = 0 to UBound(fileList)
+    Dim tempName
+    tempName = Left(fileList(i).Name, InStrRev(fileList(i).Name, ".") - 1) & "_temp." & fso.GetExtensionName(fileList(i).Name)
+    fileList(i).Name = tempName
+next
+
+' Đặt lại tên chính xác với thứ tự mới
+for i = 0 to UBound(fileList)
+    Dim formattedNumber
+    ' Định dạng lại số theo yêu cầu
+    if number < 10 then
+        formattedNumber = "#00" & number  ' Thêm # và 2 số 0
+    elseif number < 100 then
+        formattedNumber = "#0" & number   ' Thêm # và 1 số 0
+    else
+        formattedNumber = "#" & number    ' Không thêm số 0
+    end if
+    
+    ' Lấy tên file không bao gồm phần "_temp"
+    Dim fileExtension
+    fileExtension = fso.GetExtensionName(fileList(i).Name) ' Lấy phần mở rộng của file
+    
+    ' Đổi tên file về tên chuẩn với số thứ tự mới, bỏ hậu tố _temp
+    fileList(i).Name = formattedNumber & "." & fileExtension
+    number = number + 1
+next
+
+' Thông báo quá trình đổi tên hoàn tất
+MsgBox "Renaming process completed successfully!"

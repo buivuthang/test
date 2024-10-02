@@ -1,0 +1,27 @@
+Dim objFSO, folderPath, objFolder, objFile, counter
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+folderPath = InputBox("Enter the path of the folder containing the files:", "Folder Path")
+
+If objFSO.FolderExists(folderPath) Then
+    Set objFolder = objFSO.GetFolder(folderPath)
+    counter = 1
+    
+    For Each objFile In objFolder.Files
+        If counter <= 1000 Then
+            fileExtension = objFSO.GetExtensionName(objFile.Name)
+            newFileName = "#" & Right("000" & counter, 3) & "." & fileExtension
+            objFile.Name = newFileName
+            counter = counter + 1
+        Else
+            Exit For
+        End If
+    Next
+    MsgBox "Renaming complete!"
+Else
+    MsgBox "Folder does not exist."
+End If
+
+Set objFSO = Nothing
+Set objFolder = Nothing
